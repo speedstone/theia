@@ -28,6 +28,8 @@ import { ProxyPluginDeployerEntry } from './plugin-deployer-proxy-entry-impl';
 import { PluginDeployerFileHandlerContextImpl } from './plugin-deployer-file-handler-context-impl';
 import { PluginDeployerDirectoryHandlerContextImpl } from './plugin-deployer-directory-handler-context-impl';
 import { ILogger } from '@theia/core';
+import { PluginCliContribution } from './plugin-cli-contribution';
+import { LocalDirectoryPluginDeployerResolver } from './resolvers/plugin-local-dir-resolver';
 
 @injectable()
 export class PluginDeployerImpl implements PluginDeployer {
@@ -37,6 +39,9 @@ export class PluginDeployerImpl implements PluginDeployer {
 
     @inject(PluginDeployerHandler)
     protected readonly hostedPluginServer: PluginDeployerHandler;
+
+    @inject(PluginCliContribution)
+    protected readonly cliContribution: PluginCliContribution;
 
     /**
      * Deployer entries.
@@ -83,8 +88,16 @@ export class PluginDeployerImpl implements PluginDeployer {
         // init resolvers
         await this.initResolvers();
 
-        // check THEIA_DEFAULT_PLUGINS or THEIA_PLUGINS env var
-        const defaultPluginsValue = process.env.THEIA_DEFAULT_PLUGINS || undefined;
+        // check the `--plugins` CLI option and THEIA_PLUGINS env var
+        let defaultPluginsValue = this.cliContribution.localDir();
+        if (!defaultPluginsValue) {
+            // check THEIA_DEFAULT_PLUGINS env var. To be backward compatible after GH-4150.
+            defaultPluginsValue = process.env.THEIA_DEFAULT_PLUGINS;
+            if (defaultPluginsValue) {
+                // tslint:disable-next-line:max-line-length
+                this.logger.warn(`Setting the location of the plugins via the 'THEIA_DEFAULT_PLUGINS' environment variable is deprecated. Use the --${PluginCliContribution.PLUGINS}=${LocalDirectoryPluginDeployerResolver.LOCAL_DIR}:path/to/plugins CLI option instead.`);
+            }
+        }
         const pluginsValue = process.env.THEIA_PLUGINS || undefined;
 
         this.logger.debug('Found the list of default plugins ID on env:', defaultPluginsValue);
