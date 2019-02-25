@@ -343,6 +343,42 @@ export class GitQuickOpenService {
         });
     }
 
+    async stash(): Promise<void> {
+        const doStash = async (message: string) => {
+            if (this.repositoryProvider.selectedRepository) {
+                this.git.stash(this.repositoryProvider.selectedRepository, { message });
+            }
+        };
+        const quickOpenModel: QuickOpenModel = {
+            onType(lookFor: string, acceptor: (items: QuickOpenItem[]) => void): void {
+                const dynamicItems: QuickOpenItem[] = [];
+                const suffix = "Press 'Enter' to confirm or 'Escape' to cancel.";
+
+                if (lookFor === undefined || lookFor.length === 0) {
+                    dynamicItems.push(new SingleStringInputOpenItem(
+                        `Stash changes. ${suffix}`,
+                        () => doStash(lookFor)
+                    ));
+                } else {
+                    dynamicItems.push(new SingleStringInputOpenItem(
+                        `Stash changes with message: ${lookFor}. ${suffix}`,
+                        () => doStash(lookFor)
+                    ));
+                }
+                acceptor(dynamicItems);
+            }
+        };
+        this.quickOpenService.open(quickOpenModel, this.getOptions('Stash message', false));
+    }
+
+    async applyStash(): Promise<void> {
+        this.open([new GitQuickOpenItem('Eins', i => console.log('APPLY', i))], 'Select a stash to apply.');
+    }
+
+    async popStash(): Promise<void> {
+        this.open([new GitQuickOpenItem('Eins', i => console.log('POP', i))], 'Select a stash to pop.');
+    }
+
     private open(items: QuickOpenItem | QuickOpenItem[], placeholder: string): void {
         this.quickOpenService.open(this.getModel(Array.isArray(items) ? items : [items]), this.getOptions(placeholder));
     }

@@ -104,6 +104,26 @@ export namespace GIT_COMMANDS {
     export const DISCARD_ALL = {
         id: 'git.discard.all'
     };
+    export const STASH = {
+        id: 'git.stash',
+        label: 'Stash'
+    };
+    export const APPLY_STASH = {
+        id: 'git.stash.apply',
+        label: 'Apply Stash...'
+    };
+    export const APPLY_LATEST_STASH = {
+        id: 'git.stash.apply.latest',
+        label: 'Apply Latest Stash'
+    };
+    export const POP_STASH = {
+        id: 'git.stash.pop',
+        label: 'Pop Stash...'
+    };
+    export const POP_LATEST_STASH = {
+        id: 'git.stash.pop.latest',
+        label: 'Pop Latest Stash'
+    };
 }
 
 @injectable()
@@ -224,6 +244,12 @@ export class GitViewContribution extends AbstractViewContribution<GitWidget>
         menus.registerMenuAction(EditorContextMenu.NAVIGATION, {
             commandId: GIT_COMMANDS.OPEN_CHANGES.id
         });
+        [GIT_COMMANDS.STASH, GIT_COMMANDS.APPLY_STASH, GIT_COMMANDS.APPLY_LATEST_STASH, GIT_COMMANDS.POP_STASH, GIT_COMMANDS.POP_LATEST_STASH].forEach(command =>
+            menus.registerMenuAction(GitWidget.ContextMenu.STASH, {
+                commandId: command.id,
+                label: command.label
+            })
+        );
     }
 
     registerCommands(registry: CommandRegistry): void {
@@ -340,6 +366,28 @@ export class GitViewContribution extends AbstractViewContribution<GitWidget>
                 }
                 return this.quickOpenService.clone(url, folder, branch);
             }
+        });
+        registry.registerCommand(GIT_COMMANDS.STASH, {
+            execute: () => this.quickOpenService.stash(),
+            isEnabled: () => !!this.repositoryTracker.selectedRepository &&
+                !!this.repositoryTracker.selectedRepositoryStatus &&
+                this.repositoryTracker.selectedRepositoryStatus.changes.length > 0
+        });
+        registry.registerCommand(GIT_COMMANDS.APPLY_STASH, {
+            execute: () => this.quickOpenService.applyStash(),
+            isEnabled: () => !!this.repositoryTracker.selectedRepository
+        });
+        registry.registerCommand(GIT_COMMANDS.APPLY_LATEST_STASH, {
+            execute: () => console.log('APPLY LATEST STASH SHOULD HAPPEN'),
+            isEnabled: () => !!this.repositoryTracker.selectedRepository
+        });
+        registry.registerCommand(GIT_COMMANDS.POP_STASH, {
+            execute: () => this.quickOpenService.popStash(),
+            isEnabled: () => !!this.repositoryTracker.selectedRepository
+        });
+        registry.registerCommand(GIT_COMMANDS.POP_LATEST_STASH, {
+            execute: () => console.log('POP LATEST STASH SHOULD HAPPEN'),
+            isEnabled: () => !!this.repositoryTracker.selectedRepository
         });
     }
 

@@ -296,6 +296,28 @@ export namespace Git {
         }
 
         /**
+         * Options for further refining the `git stash` command.
+         */
+        export interface Stash {
+            /**
+             * The kind of stash action.
+             */
+            readonly action?: 'push' | 'apply' | 'pop' | 'list' | 'drop' | 'clear';
+
+            /**
+             * The stash id.
+             * This is an optional argument for actions of kind 'apply', 'pop' and 'drop'.
+             */
+             readonly id?: string;
+
+            /**
+             * The stash message.
+             * This is an optional argument for the 'push' action.
+             */
+             readonly message?: string;
+        }
+
+        /**
          * Options for the `git fetch` command.
          */
         export interface Fetch {
@@ -560,6 +582,14 @@ export namespace Git {
 
     }
 
+    /**
+     * Stash
+     */
+    export interface Stash {
+        id: string;
+        message: string;
+    }
+
 }
 
 /**
@@ -701,6 +731,26 @@ export interface Git extends Disposable {
      * @param options the options for further refining the `git show`.
      */
     show(repository: Repository, uri: string, options?: Git.Options.Show): Promise<string>;
+
+    /**
+     * Depending on given action in options it executes a certain stash action.
+     * Actions:
+     * push - stash with optional message
+     * pop - apply certain stash with (optional) id and remove it from the list afterwards.
+     *       If no id is given the latest stash will be applied.
+     * apply - apply certain stash with (optional) id and keep it in the list.
+     *         If no id is given the latest stash will be applied.
+     * list - method returns and list of Stash objects
+     * drop - removes the stash with the (optional) id.
+     *        If no id is given the latest stash will be removed.
+     * clear - the list of stashes gets cleared.
+     *
+     * If no options are given or no action is set it performs a `stash push`.
+     *
+     * @param repository the repository to get the file content from.
+     * @param options Options for further refining the `git stash` command.
+     */
+    stash(repository: Repository, options?: Git.Options.Stash): Promise<Git.Stash[] | void>
 
     /**
      * It resolves to an array of configured remotes names for the given repository.

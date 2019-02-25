@@ -22,6 +22,7 @@ import { push } from 'dugite-extra/lib/command/push';
 import { pull } from 'dugite-extra/lib/command/pull';
 import { clone } from 'dugite-extra/lib/command/clone';
 import { fetch } from 'dugite-extra/lib/command/fetch';
+import { stash } from 'dugite-extra/lib/command/stash';
 import { merge } from 'dugite-extra/lib/command/merge';
 import { FileUri } from '@theia/core/lib/node/file-uri';
 import { getStatus } from 'dugite-extra/lib/command/status';
@@ -548,6 +549,34 @@ export class DugiteGit implements Git {
             return (await getBlobContents(repositoryPath, commitish, path, { exec, env })).toString();
         }
         return (await getTextContents(repositoryPath, commitish, path, { exec, env })).toString();
+    }
+
+    async stash(repository: Repository, options?: Git.Options.Stash): Promise<void> {
+        const repositoryPath: string = this.getFsPath(repository);
+        if (!options || (options && !options.action)) {
+            stash.push(repositoryPath, options ? options.message : undefined);
+            return;
+        }
+        switch (options.action) {
+            case 'push':
+                stash.push(repositoryPath, options.message);
+                break;
+            case 'apply':
+                stash.apply(repositoryPath, options.id);
+                break;
+            case 'pop':
+                stash.pop(repositoryPath, options.id);
+                break;
+            case 'list':
+                stash.list(repositoryPath);
+                break;
+            case 'drop':
+                stash.drop(repositoryPath, options.id);
+                break;
+            case 'clear':
+                stash.clear(repositoryPath);
+                break;
+        }
     }
 
     async remote(repository: Repository): Promise<string[]>;
